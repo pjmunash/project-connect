@@ -28,11 +28,11 @@ export default function Navbar(){
   },[user])
   return (
     <header className="neo-card relative z-40 w-full">
-      <div className="container mx-auto p-4 flex justify-between items-center">
+      <div className="container mx-auto p-4 flex flex-wrap justify-between items-center gap-3">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-3">
             <IconLogo />
-            <span className="text-2xl font-bold" style={{ background: 'linear-gradient(90deg, #7A3CFF, #4B6BFF)', WebkitBackgroundClip:'text', color:'transparent' }}>OpportuNet</span>
+            <span className="text-2xl font-bold sm:text-2xl text-xl" style={{ background: 'linear-gradient(90deg, #7A3CFF, #4B6BFF)', WebkitBackgroundClip:'text', color:'transparent' }}>OpportuNet</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4 muted text-sm">
             <Link to="/student" className="hover:text-cyan-300">Student</Link>

@@ -16,7 +16,7 @@ export default function App(){
     <AuthProvider>
       <div className="min-h-screen" style={{background: 'var(--bg)'}}>
         <Navbar />
-        <main className="container mx-auto p-6">
+        <main className="container mx-auto px-4 sm:px-6 p-6">
           <Routes>
             <Route path="/" element={<Landing/>} />
             <Route path="/login" element={<Login/>} />
