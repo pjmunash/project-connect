@@ -88,13 +88,39 @@ function initFirebaseAdmin(){
 
   if (cred){
     try{
-      adm.initializeApp({ credential: adm.credential.cert(cred) });
-      initialized = true;
-      // store admin reference for other modules
-      admin = adm;
-      console.log('Firebase Admin initialized using service account');
+      // If an app already exists, reuse it instead of initializing a new one.
+      const already = (typeof adm.getApps === 'function' && adm.getApps().length) || (adm.apps && adm.apps.length);
+      if (already){
+        admin = adm;
+        initialized = true;
+        console.log('Firebase Admin already initialized; reusing existing app');
+      } else {
+        adm.initializeApp({ credential: adm.credential.cert(cred) });
+        initialized = true;
+        // store admin reference for other modules
+        admin = adm;
+        console.log('Firebase Admin initialized using service account');
+      }
     }catch(e){
-      console.error('Firebase Admin initialization failed:', e.message || e);
+      // Handle a common race: another module initialized the default app between the
+      // getApps() check and the call to initializeApp(). Treat that as success and
+      // reuse the existing app instead of leaving the helper uninitialized.
+      const msg = e && (e.message || String(e));
+      if (msg && msg.toLowerCase().includes('already exists')){
+        try{
+          // Attempt to reuse the existing default app
+          if (typeof adm.getApp === 'function'){
+            try{ adm.getApp(); }catch(_){ /* ignore */ }
+          }
+          admin = adm;
+          initialized = true;
+          console.log('Firebase Admin already existed (race condition); reusing existing app');
+        }catch(_e){
+          console.error('Firebase Admin initialization failed and reuse attempt failed:', _e && (_e.message || _e));
+        }
+      } else {
+        console.error('Firebase Admin initialization failed:', msg);
+      }
     }
   } else {
     console.warn('Firebase Admin not initialized (no credentials found). Tried:', tried.join(', '));
