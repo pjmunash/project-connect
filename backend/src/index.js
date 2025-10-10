@@ -27,10 +27,6 @@ app.use('/api/users', usersRoutes);
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/innterbridge-dev';
 
-<<<<<<< HEAD
-=======
-// Small diagnostic to help debugging when .env isn't loaded or MONGO_URI is missing
->>>>>>> e91cb22 (Describe your changes)
 if (!process.env.MONGO_URI) {
   console.warn('Warning: MONGO_URI not found in environment; falling back to', MONGO_URI);
 } else {
@@ -38,7 +34,6 @@ if (!process.env.MONGO_URI) {
   console.log('MONGO_URI loaded (masked):', masked);
 }
 
-<<<<<<< HEAD
 // Firebase Admin initialization
 try {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -50,8 +45,6 @@ try {
   console.warn('Firebase admin init failed at startup', e.message || e);
 }
 
-=======
->>>>>>> e91cb22 (Describe your changes)
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
