@@ -13,7 +13,13 @@ const uploadsRoutes = require('./routes/uploads');
 const usersRoutes = require('./routes/users');
 
 const app = express();
-app.use(cors());
+
+// ✅ Updated CORS to allow frontend domain
+app.use(cors({
+  origin: ['https://pjmunash.github.io'],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
@@ -23,6 +29,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/university', universityRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/users', usersRoutes);
+
+// ✅ Health check route for connectivity testing
+app.get('/api/health', (_, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/innterbridge-dev';
@@ -65,4 +76,3 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
-
