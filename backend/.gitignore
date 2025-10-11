@@ -1,3 +1,4 @@
 # backend/.gitignore (add)
 serviceAccount.json
 .env
+backend/.env
