@@ -42,7 +42,7 @@ if (!process.env.MONGO_URI) {
   console.warn('Warning: MONGO_URI not found in environment; falling back to', MONGO_URI);
 } else {
   const masked = process.env.MONGO_URI.length > 60 ? process.env.MONGO_URI.slice(0, 60) + '...' : process.env.MONGO_URI;
-  console.log('MONGO_URI loaded (masked):', masked);
+  
 }
 
 // Firebase Admin initialization
@@ -76,5 +76,4 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
-
 
