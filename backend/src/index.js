@@ -45,16 +45,54 @@ if (!process.env.MONGO_URI) {
   
 }
 
-// Firebase Admin initialization
-try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log('Firebase Admin initialized');
-} catch (e) {
-  console.warn('Firebase admin init failed at startup', e.message || e);
+// Firebase Admin initialization (support multiple sources)
+function initFirebaseFromEnv(){
+  try{
+    // 1) direct JSON in env
+    if (process.env.FIREBASE_SERVICE_ACCOUNT){
+      try{
+        const parsed = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({ credential: admin.credential.cert(parsed) });
+        console.log('Firebase Admin initialized from FIREBASE_SERVICE_ACCOUNT env');
+        return true;
+      }catch(e){
+        console.warn('FIREBASE_SERVICE_ACCOUNT present but not valid JSON');
+      }
+    }
+
+    // 2) base64 encoded JSON
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64){
+      try{
+        const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+        const parsed = JSON.parse(json);
+        admin.initializeApp({ credential: admin.credential.cert(parsed) });
+        console.log('Firebase Admin initialized from FIREBASE_SERVICE_ACCOUNT_BASE64 env');
+        return true;
+      }catch(e){
+        console.warn('FIREBASE_SERVICE_ACCOUNT_BASE64 present but invalid');
+      }
+    }
+
+    // 3) file path
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH){
+      const fp = path.resolve(__dirname, '..', process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
+      try{
+        const j = require(fp);
+        admin.initializeApp({ credential: admin.credential.cert(j) });
+        console.log('Firebase Admin initialized from file', fp);
+        return true;
+      }catch(e){
+        console.warn('FIREBASE_SERVICE_ACCOUNT_PATH set but failed to load file', fp, e.message || e);
+      }
+    }
+  }catch(e){
+    console.error('Unexpected error initializing Firebase Admin', e.message || e);
+  }
+  console.warn('Firebase Admin not initialized (no valid credentials found)');
+  return false;
 }
+
+initFirebaseFromEnv();
 
 mongoose.connect(MONGO_URI)
   .then(() => {
