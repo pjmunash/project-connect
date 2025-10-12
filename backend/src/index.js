@@ -33,14 +33,18 @@ if (!process.env.MONGO_URI) {
   console.warn('Warning: MONGO_URI not found in environment; falling back to', MONGO_URI);
 } else {
   const masked = process.env.MONGO_URI.length > 60 ? process.env.MONGO_URI.slice(0, 60) + '...' : process.env.MONGO_URI;
-  console.log('MONGO_URI loaded (masked):', masked);
+  
 }
 
-
-try{
-  firebaseAdminHelper.initFirebaseAdmin();
-}catch(e){
-  console.warn('Firebase Admin init helper threw an error:', e && (e.message || e));
+// Firebase Admin initialization
+try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+  console.log('Firebase Admin initialized');
+} catch (e) {
+  console.warn('Firebase admin init failed at startup', e.message || e);
 }
 
 
