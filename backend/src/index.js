@@ -35,6 +35,28 @@ app.get('/api/health', (_, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Root status page - helpful for simple availability checks in a browser
+app.get('/', (_, res) => {
+  res.type('html').send(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Project Connect API</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;margin:2rem;color:#111}a{color:#0366d6}</style>
+      </head>
+      <body>
+        <h1>Project Connect API</h1>
+        <p>Status: <strong>running</strong></p>
+        <p>Try the health endpoint: <a href="/api/health">/api/health</a></p>
+        <p>API base: <code>/api/</code></p>
+        <p>If you expected a web frontend here, the frontend is deployed separately (e.g. GitHub Pages). See your project README for the frontend URL.</p>
+      </body>
+    </html>
+  `);
+});
+
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/innterbridge-dev';
 
@@ -114,4 +136,3 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
-

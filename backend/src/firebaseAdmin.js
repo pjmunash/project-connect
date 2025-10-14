@@ -42,6 +42,22 @@ function initFirebaseAdmin(){
       const json = Buffer.from(base64, 'base64').toString('utf8');
       cred = JSON.parse(json);
       tried.push('FIREBASE_SERVICE_ACCOUNT_BASE64 (env)');
+      // If requested (or if no file exists), write the decoded service account to a file
+      try{
+        const writeFlag = (process.env.FIREBASE_SERVICE_ACCOUNT_WRITE || '').toLowerCase();
+        const targetPath = pathLib.resolve(__dirname, '..', 'serviceAccount.json');
+        if ((writeFlag === 'true' || writeFlag === '1') && !fs.existsSync(targetPath)){
+          try{
+            fs.writeFileSync(targetPath, JSON.stringify(cred, null, 2), { encoding: 'utf8' });
+            // On *nix we'd set restrictive perms; on Windows this is best-effort
+            try{ fs.chmodSync(targetPath, 0o600); }catch(e){}
+            console.log('Wrote service account to', targetPath, '(FIREBASE_SERVICE_ACCOUNT_WRITE=true)');
+            tried.push(`wrote:${targetPath}`);
+          }catch(e){
+            console.warn('Failed to write service account file:', e.message || e);
+          }
+        }
+      }catch(e){ /* ignore write errors */ }
     } else if (envPath){
       const abs = pathLib.isAbsolute(envPath) ? envPath : pathLib.resolve(process.cwd(), envPath);
       tried.push(abs);

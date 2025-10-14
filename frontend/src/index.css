@@ -15,7 +15,14 @@
 }
 
 @layer base {
-	body { background: radial-gradient(900px 300px at 12% 10%, rgba(122,60,255,0.03), transparent), linear-gradient(180deg, rgba(8,10,14,0.6), rgba(6,8,12,0.9)), var(--bg); color: var(--text); padding: 32px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+	/* make sizing predictable on small screens */
+	*, *::before, *::after { box-sizing: border-box; }
+	html, body { max-width: 100%; }
+	body { background: radial-gradient(900px 300px at 12% 10%, rgba(122,60,255,0.03), transparent), linear-gradient(180deg, rgba(8,10,14,0.6), rgba(6,8,12,0.9)), var(--bg); color: var(--text); padding: 16px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+	/* larger padding on wider screens */
+	@media (min-width: 768px){
+		body { padding: 32px; }
+	}
 	a { color: var(--cyan); }
 }
 
