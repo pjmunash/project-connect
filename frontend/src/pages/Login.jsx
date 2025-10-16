@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import SignInWithGoogle from '../components/SignInWithGoogle'
 import { useEffect } from 'react'
+import api from '../lib/api'
+import { sendPasswordResetEmail } from 'firebase/auth'
+import { auth as firebaseAuth } from '../firebase'
 
 export default function Login({ defaultRole='', onSuccess }){
   const [email, setEmail] = useState('')
@@ -40,6 +43,46 @@ export default function Login({ defaultRole='', onSuccess }){
     }catch(err){ setError(err.response?.data?.message || 'Login failed') }
   }
 
+  // Handle Google sign-in success: exchange firebase id token for backend JWT
+  const handleGoogleSuccess = async (result) => {
+    try{
+      const fuser = result.user
+      const idToken = await fuser.getIdToken()
+      // exchange with backend for a JWT
+      const exchange = await api.post('/auth/firebase-exchange', { idToken, role: roleFromQuery || '' })
+      const backendToken = exchange.data.token
+      const backendUser = exchange.data.user
+      // persist token and set user in context
+      localStorage.setItem('token', backendToken)
+      api.setToken(backendToken)
+      if (auth.setUser) auth.setUser(backendUser)
+      // redirect based on role
+      const role = backendUser?.role || roleFromQuery || 'student'
+      if (role === 'student') nav('/student')
+      else if (role === 'employer') nav('/employer')
+      else if (role === 'university') nav('/university')
+      else nav('/')
+    }catch(err){
+      setError(err.response?.data?.message || err.message || 'Google sign-in failed')
+    }
+  }
+
+  // Forgot password flow (Firebase only)
+  const [showReset, setShowReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
+
+  const sendReset = async () => {
+    setResetMsg('')
+    if (!auth.firebaseMode){ setResetMsg('Password reset is only available when using Firebase auth.'); return }
+    try{
+      await sendPasswordResetEmail(firebaseAuth, resetEmail || email)
+      setResetMsg('Password reset email sent. Check your inbox.')
+    }catch(e){
+      setResetMsg(e?.message || 'Failed to send reset email')
+    }
+  }
+
   function parseRoleFromToken(token){
     try{
       const parts = token.split('.')
@@ -57,10 +100,24 @@ export default function Login({ defaultRole='', onSuccess }){
         <form onSubmit={submit} className="space-y-3">
           <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="neo-input w-full" />
           <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" className="neo-input w-full" />
-          <button className="neo-btn w-full">Login</button>
+          <div className="flex gap-2 items-center">
+            <button className="neo-btn w-full">Login</button>
+            <button type="button" className="ml-2 text-sm text-sky-300 underline" onClick={()=>setShowReset(s=>!s)}>Forgot?</button>
+          </div>
         </form>
+        {showReset && (
+          <div className="mt-3 p-3 bg-slate-900 rounded">
+            <div className="text-sm mb-2">Enter your email to receive a password reset link:</div>
+            <input value={resetEmail} onChange={e=>setResetEmail(e.target.value)} placeholder="Email for reset" className="neo-input w-full mb-2" />
+            <div className="flex gap-2">
+              <button className="neo-btn" onClick={sendReset}>Send reset</button>
+              <button className="neo-btn bg-gray-600" onClick={()=>setShowReset(false)}>Cancel</button>
+            </div>
+            {resetMsg && <div className="mt-2 text-sm text-slate-200">{resetMsg}</div>}
+          </div>
+        )}
         <div className="mt-3">
-          <SignInWithGoogle onSuccess={()=>{ /* AuthContext onAuthStateChanged will exchange and set user; navigation handled by effect above */ }} onError={(e)=>setError('Google sign-in failed')} role={roleFromQuery || ''} />
+          <SignInWithGoogle onSuccess={handleGoogleSuccess} onError={(e)=>setError('Google sign-in failed')} role={roleFromQuery || ''} />
         </div>
       </div>
     </div>
