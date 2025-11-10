@@ -10,7 +10,9 @@ if (!email){ console.error('Usage: node tools/setVerifiedByEmail.js user@example
 const svcPath = path.resolve(__dirname, '..', 'serviceAccount.json')
 try{
   const serviceAccount = require(svcPath)
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
+  if (!admin.apps || !admin.apps.length) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
+  }
 } catch (e){
   console.error('Failed to initialize firebase-admin. Ensure serviceAccount.json exists at backend/serviceAccount.json')
   console.error(e.message)

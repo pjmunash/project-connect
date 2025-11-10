@@ -3,7 +3,6 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const admin = require('firebase-admin');
 
 const authRoutes = require('./routes/auth');
 const internshipRoutes = require('./routes/internships');
@@ -14,12 +13,8 @@ const usersRoutes = require('./routes/users');
 
 const app = express();
 
-//  Updated CORS to allow frontend domain
-app.use(cors({
-  origin: ['https://pjmunash.github.io'],
-  credentials: true
-}));
-
+// Allow flexible CORS in deployments; adapt origin as needed in production
+app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
@@ -30,9 +25,21 @@ app.use('/api/university', universityRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/users', usersRoutes);
 
-// ✅Health check route for connectivity testing
-app.get('/api/health', (_, res) => {
-  res.status(200).json({ status: 'ok' });
+// Health check
+app.get('/api/health', (_, res) => res.status(200).json({ status: 'ok' }));
+
+// Internal status for troubleshooting Firebase Admin in deployed environments.
+// Returns non-sensitive booleans (configured, whether env vars exist).
+app.get('/api/_internal/admin-status', (_, res) => {
+  try{
+    const fa = require('./firebaseAdmin');
+    const adm = fa.getAdmin && fa.getAdmin();
+    const hasBase64 = !!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+    const hasPath = !!process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+    res.json({ configured: !!adm, hasEnvBase64: hasBase64, hasEnvPath: hasPath });
+  }catch(e){
+    res.status(500).json({ error: e && (e.message || String(e)) });
+  }
 });
 
 const PORT = process.env.PORT || 4000;
@@ -45,22 +52,42 @@ if (!process.env.MONGO_URI) {
   console.log('MONGO_URI loaded (masked):', masked);
 }
 
-<<<<<<< HEAD
-// Firebase Admin initialization
-try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log('Firebase Admin initialized');
-} catch (e) {
-  console.warn('Firebase admin init failed at startup', e.message || e);
+// Initialize Firebase Admin via helper (safe no-op if package missing or no creds)
+try{
+  const { initFirebaseAdmin } = require('./firebaseAdmin');
+  initFirebaseAdmin();
+}catch(e){
+  console.warn('Could not initialize Firebase Admin from helper:', e && (e.message || e));
 }
 
-=======
->>>>>>> e91cb22 (Describe your changes)
-mongoose.connect(MONGO_URI)
-  .then(() => {
+// Log whether Firebase Admin ended up configured (helpful on deployment logs)
+try{
+  const fa = require('./firebaseAdmin');
+  const adm = fa.getAdmin && fa.getAdmin();
+  if (adm) console.log('Firebase Admin: configured');
+  else console.warn('Firebase Admin: not configured');
+}catch(e){
+  console.warn('Failed to check Firebase Admin status:', e && (e.message || e));
+}
+
+// Resilient MongoDB connection with retry/backoff and helpful logging.
+const mongooseOpts = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  keepAlive: true,
+  keepAliveInitialDelay: 300000
+};
+
+mongoose.connection.on('connected', () => console.log('MongoDB: connected'));
+mongoose.connection.on('reconnected', () => console.log('MongoDB: reconnected'));
+mongoose.connection.on('disconnected', () => console.warn('MongoDB: disconnected'));
+mongoose.connection.on('error', (err) => console.error('MongoDB error:', err && (err.message || err)));
+
+async function connectWithRetry(retries = 0){
+  try{
+    await mongoose.connect(MONGO_URI, mongooseOpts);
     console.log('Connected to MongoDB');
     // start HTTP server once DB is connected
     function tryListen(portToTry){
@@ -87,4 +114,5 @@ mongoose.connect(MONGO_URI)
 
 // Start the initial connect attempt
 connectWithRetry();
+
 

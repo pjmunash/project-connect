@@ -7,7 +7,13 @@ const path = require('path')
 const svcPath = path.resolve(__dirname, '..', 'serviceAccount.json')
 try{
   const serviceAccount = require(svcPath)
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
+  // Guard against duplicate initialization in environments where an app
+  // may already have been initialized by another module.
+  if (!admin.apps || !admin.apps.length) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
+  } else {
+    // reuse existing app
+  }
 } catch (e){
   console.error('Failed to initialize firebase-admin. Ensure serviceAccount.json exists at backend/serviceAccount.json')
   console.error(e.message)
