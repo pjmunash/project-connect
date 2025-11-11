@@ -6,7 +6,7 @@ const { verifyIdToken } = require('../firebaseAdmin');
 
 const router = express.Router();
 
-// Signup - creates user and returns a token (email verification flow is stubbed)
+
 router.post('/signup', async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
@@ -17,7 +17,7 @@ router.post('/signup', async (req, res) => {
   const user = new User({ email, passwordHash: hash, name, role, verified: true });
     await user.save();
 
-    // TODO: send verification email
+    
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '7d' });
     res.json({ token, user: { id: user._id, email: user.email, role: user.role, verified: user.verified } });
@@ -27,7 +27,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Middleware: require auth
+
 async function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ message: 'Missing auth token' });
@@ -85,15 +85,6 @@ async function requireAuth(req, res, next) {
     // Otherwise the token is invalid or expired — return 401 with a helpful detail
     return res.status(401).json({ message: 'Invalid token', detail: msg });
   }
-}
-
-// Middleware: require role
-function requireRole(role) {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
-    if (req.user.role !== role && req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
-    next();
-  };
 }
 
 router.get('/me', requireAuth, async (req, res) => {

@@ -68,7 +68,7 @@ export default function UniversityPage(){
 
   const maskEmail = (e)=>{ if (!e) return ''; if (revealedEmails && revealedEmails.has && revealedEmails.has(e)) return e; const parts = e.split('@'); if (parts.length !== 2) return '***'; return parts[0][0] + '****@' + parts[1] }
 
-  // Selected student panel
+  
   if (selectedStudent){
     const prof = selectedStudent.profile || {}
     const skills = (prof.skills || []).join(', ')
@@ -131,7 +131,7 @@ export default function UniversityPage(){
     )
   }
 
-  // University dashboard
+  
   if (user && user.role === 'university'){
     return (
       <div className="space-y-6">
@@ -212,7 +212,7 @@ export default function UniversityPage(){
     )
   }
 
-  // Marketing / unauthenticated view
+  
   return (
     <div className="space-y-6">
       <section className="neo-card p-8">

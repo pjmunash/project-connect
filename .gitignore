@@ -8,3 +8,5 @@ node_modules
 node_modules
 frontend/.env
 backend/.env
+frontend/.env.local
+backend/serviceAccount.json

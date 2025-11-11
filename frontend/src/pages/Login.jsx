@@ -31,10 +31,10 @@ export default function Login({ defaultRole='', onSuccess }){
     try{
       const res = await auth.login({ email, password })
       const respUser = res.data?.user
-      // call onSuccess if provided
+      
       if (onSuccess) return onSuccess(respUser || { role: defaultRole })
 
-      // otherwise redirect locally based on role
+      
       const role = respUser?.role || defaultRole || (res.data?.token ? parseRoleFromToken(res.data.token) : null)
       if (role === 'student') nav('/student')
       else if (role === 'employer') nav('/employer')
@@ -43,20 +43,20 @@ export default function Login({ defaultRole='', onSuccess }){
     }catch(err){ setError(err.response?.data?.message || 'Login failed') }
   }
 
-  // Handle Google sign-in success: exchange firebase id token for backend JWT
+  
   const handleGoogleSuccess = async (result) => {
     try{
       const fuser = result.user
       const idToken = await fuser.getIdToken()
-      // exchange with backend for a JWT
+      
       const exchange = await api.post('/auth/firebase-exchange', { idToken, role: roleFromQuery || '' })
       const backendToken = exchange.data.token
       const backendUser = exchange.data.user
-      // persist token and set user in context
+      
       localStorage.setItem('token', backendToken)
       api.setToken(backendToken)
       if (auth.setUser) auth.setUser(backendUser)
-      // redirect based on role
+      
       const role = backendUser?.role || roleFromQuery || 'student'
       if (role === 'student') nav('/student')
       else if (role === 'employer') nav('/employer')
@@ -67,7 +67,7 @@ export default function Login({ defaultRole='', onSuccess }){
     }
   }
 
-  // Forgot password flow (Firebase only)
+  
   const [showReset, setShowReset] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetMsg, setResetMsg] = useState('')

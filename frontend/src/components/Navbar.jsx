@@ -42,7 +42,7 @@ export default function Navbar(){
           </nav>
         </div>
 
-        {/* Right side */}
+        {}
         <div className="flex items-center gap-4">
           <ApiStatus />
           {user && user.role === 'employer' && (
@@ -52,7 +52,7 @@ export default function Navbar(){
             </div>
           )}
 
-          {/* Desktop auth actions */}
+          {}
           <div className="hidden sm:flex items-center gap-3">
             {user ? (
               <>
@@ -67,13 +67,13 @@ export default function Navbar(){
             )}
           </div>
 
-          {/* Mobile menu toggle */}
+          {}
           <button onClick={()=>setOpen(o=>!o)} className="md:hidden p-2 rounded-md neo-ghost">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} /></svg>
           </button>
         </div>
 
-        {/* Mobile dropdown menu */}
+        {}
         {open && (
           <div className="w-full mt-3 md:hidden">
             <nav className="flex flex-col gap-2 muted text-sm neo-card">

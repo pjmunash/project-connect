@@ -42,7 +42,7 @@ export default function EmployerPage(){
     return ()=> mounted = false
   },[user])
 
-  // simple polling for new applicants count to show a notification badge
+  
   useEffect(()=>{
     let mounted = true
     let timer = null
@@ -54,7 +54,7 @@ export default function EmployerPage(){
         const mine = (r.data.items || []).filter(it=> String(it.postedBy?._id || it.postedBy) === String(user?.id) || it.postedBy?.email === user?.email)
         const totalNew = mine.reduce((acc,i)=> acc + ((i.applicants||[]).filter(a=> a.status === 'applied').length), 0)
         setNotifications(totalNew)
-      }catch(e){ /* ignore */ }
+      }catch(e){  }
       timer = setTimeout(poll, 15000)
     }
     poll()
@@ -68,7 +68,7 @@ export default function EmployerPage(){
     setLoadingApplicants(true)
     try{
       const res = await api.get(`/internships/${post._id}/applicants`)
-      // normalize resume urls
+      
       const apps = (res.data.applicants || []).map(a => ({ ...a, resumeUrl: api.absoluteUrl(a.resumeUrl) }))
       setApplicants(apps)
     }catch(e){
@@ -143,7 +143,7 @@ export default function EmployerPage(){
     }catch(e){ console.error('Export failed', e); alert('Export failed: ' + (e?.message || 'unknown')) }
   }
 
-  // simple applicants panel — render this first when a posting is selected
+  
   if (selected){
     return (
       <div className="neo-card p-4">
@@ -188,7 +188,7 @@ export default function EmployerPage(){
                 </div>
                 <div className="w-56 text-right">
                   {a.resumeUrl ? <a className="inline-block text-sm text-cyan-300 mb-2" target="_blank" rel="noreferrer" href={api.absoluteUrl(a.resumeUrl)}>View resume</a> : <div className="text-sm muted">No resume</div>}
-                  {/* show form answers if present */}
+                  {}
                   {a.formAnswers && Object.keys(a.formAnswers || {}).length > 0 && (
                     <div className="mt-2 text-sm bg-[rgba(255,255,255,0.02)] border p-2 rounded">
                       <div className="font-semibold mb-1">Application answers</div>
