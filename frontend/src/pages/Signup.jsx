@@ -121,6 +121,7 @@ export default function Signup({ defaultRole='', onSuccess }){
               <option value="student">Student</option>
               <option value="employer">Employer</option>
               <option value="university">University</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
           <button className="neo-btn w-full">Create account</button>

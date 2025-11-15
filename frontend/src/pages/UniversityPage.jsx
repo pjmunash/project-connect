@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import VerifyEmailNotice from '../components/VerifyEmailNotice'
 import api from '../lib/api'
+import { useModal } from '../contexts/ModalContext'
 
 export default function UniversityPage(){
   const { user } = useAuth()
+  const modal = useModal()
   const [email, setEmail] = useState('')
   const [verified, setVerified] = useState(null)
   const [students, setStudents] = useState([])
@@ -34,7 +36,7 @@ export default function UniversityPage(){
       const s = (res.data.students || [])[0]
       setVerified(s ? !!s.verified : null)
       if (s) setRevealedEmails(prev=>{const n=new Set(prev); n.add(s.email); return n})
-    }catch(err){ setVerified(null); alert('Check failed') }
+    }catch(err){ setVerified(null); await modal.showAlert('Check failed') }
   }
 
   const toggle = async ()=>{
@@ -42,20 +44,20 @@ export default function UniversityPage(){
       const s = students.find(s => s.email.toLowerCase() === (email||'').toLowerCase())
       let id = s ? s._id : null
       if (!id){ const res = await api.get(`/university/students?q=${encodeURIComponent(email)}`); id = (res.data.students && res.data.students[0] && res.data.students[0]._id) || null }
-      if (!id) return alert('Student not found')
+      if (!id) return await modal.showAlert('Student not found')
       const cur = students.find(x=>x._id===id)?.verified
       await api.post(`/university/students/${id}/verify`, { verified: !cur })
       const res2 = await api.get('/university/students'); setStudents(res2.data.students || [])
       setVerified(prev => prev === null ? null : !prev)
-    }catch(err){ console.error(err); alert('Toggle failed') }
+    }catch(err){ console.error(err); await modal.showAlert('Toggle failed') }
   }
 
   const submitBulk = async ()=>{
     const emails = bulkText.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)
-    if (emails.length === 0 && !bulkDomain) return alert('Paste emails or enter a domain')
+    if (emails.length === 0 && !bulkDomain) return await modal.showAlert('Paste emails or enter a domain')
     setLoadingBulk(true); setBulkResults(null)
     try{ const payload = emails.length ? { emails } : { domain: bulkDomain }; const res = await api.post('/university/students/bulk', payload); setBulkResults(res.data) }
-    catch(err){ console.error('Bulk lookup failed', err); alert('Bulk lookup failed') }finally{ setLoadingBulk(false) }
+    catch(err){ console.error('Bulk lookup failed', err); await modal.showAlert('Bulk lookup failed') }finally{ setLoadingBulk(false) }
   }
 
   const viewApplications = async (student)=>{
@@ -63,7 +65,7 @@ export default function UniversityPage(){
     setRevealedEmails(prev => { const n = new Set(prev); n.add(student.email); return n })
     setSelectedStudent(student)
     try{ const res = await api.get(`/internships/student/applications?email=${encodeURIComponent(student.email)}`); setApplications(res.data.applications || []) }
-    catch(err){ console.error('Failed to load student applications', err); alert('Failed to load applications'); setApplications([]) }
+    catch(err){ console.error('Failed to load student applications', err); await modal.showAlert('Failed to load applications'); setApplications([]) }
   }
 
   const maskEmail = (e)=>{ if (!e) return ''; if (revealedEmails && revealedEmails.has && revealedEmails.has(e)) return e; const parts = e.split('@'); if (parts.length !== 2) return '***'; return parts[0][0] + '****@' + parts[1] }

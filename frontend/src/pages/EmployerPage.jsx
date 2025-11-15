@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
+import { useModal } from '../contexts/ModalContext'
 
 function StatusChip({ status }){
   const map = {
@@ -16,6 +17,7 @@ function StatusChip({ status }){
 
 export default function EmployerPage(){
   const { user } = useAuth()
+  const modal = useModal()
   const [posts, setPosts] = useState([])
   const [selected, setSelected] = useState(null)
   const [applicants, setApplicants] = useState([])
@@ -86,7 +88,7 @@ export default function EmployerPage(){
     }catch(e){
       console.error('Status update failed', e)
       const msg = e.response?.data?.message || e.response?.data?.detail || e.message || 'Update failed'
-      alert('Update failed: ' + msg)
+      await modal.showAlert('Update failed: ' + msg)
     }
   }
 
@@ -103,7 +105,7 @@ export default function EmployerPage(){
       }
       setForm({ title:'', company: user?.name || '', field:'', location:'', remote:false, paid:false, description:'', requirements:'', duration:'', stipend:'', deadline:'' })
     }catch(err){
-      alert(err.response?.data?.message || 'Failed to post. Are you authorized?')
+      await modal.showAlert(err.response?.data?.message || 'Failed to post. Are you authorized?')
     }
   }
 
@@ -114,11 +116,12 @@ export default function EmployerPage(){
   }
 
   const removePost = async (p)=>{
-    if (!confirm('Delete this posting?')) return
+    const ok = await modal.showConfirm('Delete this posting?')
+    if (!ok) return
     try{
       await api.delete(`/internships/${p._id}`)
       setPosts(prev=> prev.filter(x=> x._id !== p._id))
-    }catch(e){ alert('Delete failed') }
+    }catch(e){ await modal.showAlert('Delete failed') }
   }
 
   const filteredApplicants = applicants.filter(a => {
@@ -137,10 +140,10 @@ export default function EmployerPage(){
   const exportApplicants = async ()=>{
     try{
       const rows = filteredApplicants.map(a=>({ name: a.user?.name || '', email: a.user?.email || '', status: a.status, appliedAt: a.appliedAt, resumeUrl: a.resumeUrl }))
-      if (!rows || rows.length === 0) return alert('No applicants to export')
+      if (!rows || rows.length === 0) return await modal.showAlert('No applicants to export')
       const { exportCsv } = await import('../lib/csv');
       exportCsv(`applicants-${selected?._id || 'list'}.csv`, rows)
-    }catch(e){ console.error('Export failed', e); alert('Export failed: ' + (e?.message || 'unknown')) }
+    }catch(e){ console.error('Export failed', e); await modal.showAlert('Export failed: ' + (e?.message || 'unknown')) }
   }
 
   
@@ -281,9 +284,9 @@ export default function EmployerPage(){
                           <button onClick={()=>viewApplicants(p)} className="neo-btn">View</button>
                           <button onClick={()=>startEdit(p)} className="neo-ghost">Edit</button>
                           {p.active ? (
-                            <button onClick={async()=>{ if (!confirm('Take down this posting?')) return; try{ await api.patch(`/internships/${p._id}/takedown`); setPosts(prev=> prev.map(x=> x._id === p._id ? { ...x, active:false } : x)); }catch(e){ alert('Failed to take down') } }} className="neo-ghost">Take down</button>
+                            <button onClick={async()=>{ const ok = await modal.showConfirm('Take down this posting?'); if (!ok) return; try{ await api.patch(`/internships/${p._id}/takedown`); setPosts(prev=> prev.map(x=> x._id === p._id ? { ...x, active:false } : x)); }catch(e){ await modal.showAlert('Failed to take down') } }} className="neo-ghost">Take down</button>
                           ) : (
-                            <button onClick={async()=>{ try{ await api.patch(`/internships/${p._id}/restore`); setPosts(prev=> prev.map(x=> x._id === p._id ? { ...x, active:true } : x)); }catch(e){ alert('Failed to restore') } }} className="neo-btn">Restore</button>
+                            <button onClick={async()=>{ try{ await api.patch(`/internships/${p._id}/restore`); setPosts(prev=> prev.map(x=> x._id === p._id ? { ...x, active:true } : x)); }catch(e){ await modal.showAlert('Failed to restore') } }} className="neo-btn">Restore</button>
                           )}
                           <button onClick={()=>removePost(p)} className="neo-ghost">Delete</button>
                       </div>

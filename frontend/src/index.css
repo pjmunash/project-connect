@@ -53,6 +53,27 @@
 /* inputs */
 .neo-input { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border: 1px solid rgba(255,255,255,0.03); color:var(--text); padding:10px; border-radius:12px; }
 
+/* Improve select / option contrast for dropdowns (better visibility in dark theme) */
+select.neo-input {
+	color: var(--text);
+	background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.45));
+}
+/* Native option styling is limited; provide high-contrast defaults where supported */
+select.neo-input option {
+	background: var(--bg);
+	color: var(--text);
+}
+select.neo-input option:checked,
+select.neo-input option:active {
+	background: rgba(122,60,255,0.12);
+	color: var(--text);
+}
+select.neo-input:focus {
+	outline: none;
+	box-shadow: 0 0 0 4px rgba(122,60,255,0.06);
+	border-color: rgba(122,60,255,0.2);
+}
+
 /* small utility */
 .muted { color: var(--muted); }
 

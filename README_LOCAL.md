@@ -30,3 +30,8 @@ npm run dev
 ```
 
 The frontend has a small health check that pings `/api/internships` and displays `API: online` / `API: offline` in the UI.
+
+Environment files
+ - Copy `backend/.env.example` to `backend/.env` and update `JWT_SECRET` and `MONGO_URI` as needed.
+ - Copy `frontend/.env.example` to `frontend/.env` and fill your Firebase web config values if using Firebase auth.
+ - If you prefer not to place a plain `serviceAccount.json` file on disk, set `FIREBASE_SERVICE_ACCOUNT_BASE64` in `backend/.env` to the base64-encoded service account JSON. The server will still run without Firebase credentials but admin/Firebase-backed endpoints will be disabled until credentials are provided.

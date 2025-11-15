@@ -8,15 +8,18 @@ import AuthGate from './pages/AuthGate'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import { AuthProvider } from './contexts/AuthContext'
+import { ModalProvider } from './contexts/ModalContext'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminDashboard from './pages/AdminDashboard'
 
 export default function App(){
   return (
-    <AuthProvider>
-      <div className="min-h-screen" style={{background: 'var(--bg)'}}>
-        <Navbar />
-        <main className="container mx-auto px-4 sm:px-6 p-6">
+    <ModalProvider>
+      <AuthProvider>
+        <div className="min-h-screen" style={{background: 'var(--bg)'}}>
+          <Navbar />
+          <main className="container mx-auto px-4 sm:px-6 p-6">
           <Routes>
             <Route path="/" element={<Landing/>} />
             <Route path="/login" element={<Login/>} />
@@ -29,9 +32,11 @@ export default function App(){
             <Route path="/student" element={<ProtectedRoute role="student"><StudentPage/></ProtectedRoute>} />
             <Route path="/employer" element={<ProtectedRoute role="employer"><EmployerPage/></ProtectedRoute>} />
             <Route path="/university" element={<ProtectedRoute role="university"><UniversityPage/></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard/></ProtectedRoute>} />
           </Routes>
-        </main>
-      </div>
-    </AuthProvider>
+          </main>
+        </div>
+      </AuthProvider>
+    </ModalProvider>
   )
 }

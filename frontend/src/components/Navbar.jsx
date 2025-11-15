@@ -39,6 +39,7 @@ export default function Navbar(){
             <Link to="/student" className="hover:text-cyan-300">Student</Link>
             <Link to="/employer" className="hover:text-cyan-300">Employer</Link>
             <Link to="/university" className="hover:text-cyan-300">University</Link>
+             
           </nav>
         </div>
         <div className="flex items-center gap-4">
@@ -47,6 +48,11 @@ export default function Navbar(){
             <div className="relative muted text-sm hidden sm:block">
               <Link to="/employer">Dashboard</Link>
               {applicantCount > 0 && <span className="absolute -top-2 -right-4 bg-[#ff6b6b] text-white rounded-full text-xs px-2">{applicantCount}</span>}
+            </div>
+          )}
+          {user && user.role === 'admin' && (
+            <div className="relative muted text-sm hidden sm:block">
+              <Link to="/admin">Admin</Link>
             </div>
           )}
           {user ? (

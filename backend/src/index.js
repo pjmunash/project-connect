@@ -26,7 +26,10 @@ app.use('/api/university', universityRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/users', usersRoutes);
 
-const PORT = process.env.PORT || 4000;
+const MIN_PORT = 4000;
+const MAX_PORT = 4010;
+const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : null;
+const PORT = (requestedPort && requestedPort >= MIN_PORT && requestedPort <= MAX_PORT) ? requestedPort : MIN_PORT;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/innterbridge-dev';
 
 if (!process.env.MONGO_URI) {
@@ -36,22 +39,23 @@ if (!process.env.MONGO_URI) {
   
 }
 
-// Firebase Admin initialization
+// Initialize Firebase Admin using the helper which supports multiple
+// credential sources (base64 env, path env, or serviceAccount.json file).
 try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log('Firebase Admin initialized');
+  firebaseAdminHelper.initFirebaseAdmin();
 } catch (e) {
   console.warn('Firebase admin init failed at startup', e.message || e);
 }
 
 
 function tryListen(portToTry){
+  if (portToTry > MAX_PORT){
+    console.error(`No available ports in range ${MIN_PORT}-${MAX_PORT}. Aborting.`);
+    process.exit(1);
+    return;
+  }
   const server = app.listen(portToTry, () => {
     console.log(`Server running on port ${portToTry}`);
-    
     console.log('API: online');
   });
   server.on('error', (err) => {
