@@ -20,7 +20,7 @@ export default function ApiStatus(){
     return ()=>{ mounted = false; clearInterval(id) }
   },[])
 
-  if (ok === null) return <span className="text-sm muted">API: …</span>
+  if (ok === null) return <span className="text-sm muted">connecting...</span>
   if (ok) return <span className="text-sm" style={{color: 'var(--accent)'}}>Online</span>
   return <span className="text-sm" style={{color: 'var(--danger)'}}>Offline</span>
 }
