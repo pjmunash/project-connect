@@ -8,7 +8,7 @@ export default function ApiStatus(){
     let id
     async function check(){
       try{
-        // ping internships endpoint as a simple health check
+       
         await api.get('/internships', { timeout: 3000 })
         if (mounted) setOk(true)
       }catch(e){
@@ -21,6 +21,6 @@ export default function ApiStatus(){
   },[])
 
   if (ok === null) return <span className="text-sm muted">API: …</span>
-  if (ok) return <span className="text-sm" style={{color: 'var(--accent)'}}>API: up</span>
-  return <span className="text-sm" style={{color: 'var(--danger)'}}>API: down</span>
+  if (ok) return <span className="text-sm" style={{color: 'var(--accent)'}}>online</span>
+  return <span className="text-sm" style={{color: 'var(--danger)'}}>offline</span>
 }
