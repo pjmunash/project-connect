@@ -21,6 +21,6 @@ export default function ApiStatus(){
   },[])
 
   if (ok === null) return <span className="text-sm muted">API: …</span>
-  if (ok) return <span className="text-sm" style={{color: 'var(--accent)'}}>online</span>
-  return <span className="text-sm" style={{color: 'var(--danger)'}}>offline</span>
+  if (ok) return <span className="text-sm" style={{color: 'var(--accent)'}}>Online</span>
+  return <span className="text-sm" style={{color: 'var(--danger)'}}>Offline</span>
 }
