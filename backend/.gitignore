@@ -2,3 +2,4 @@
 .env
 backend/.env
 serviceAccount.base64.txt
+serviceAccount.base64.txt
