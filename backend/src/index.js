@@ -14,7 +14,17 @@ const uploadsRoutes = require('./routes/uploads');
 const usersRoutes = require('./routes/users');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: function(origin, callback){
+    // allow requests with no origin (like curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.indexOf(origin) !== -1) return callback(null, true);
+    const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
+    return callback(new Error(msg), false);
+  },
+  credentials: true,       // allow cookies/credentials if your app uses them; otherwise set false
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
