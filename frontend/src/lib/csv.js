@@ -4,7 +4,7 @@ export function exportCsv(filename, rows){
   const header = keys.join(',') + '\n';
   const body = rows.map(r => keys.map(k => {
     const v = r[k] === undefined || r[k] === null ? '' : String(r[k]);
-    // escape quotes
+    
     return '"' + v.replace(/"/g, '""') + '"';
   }).join(',')).join('\n');
   const csv = header + body;

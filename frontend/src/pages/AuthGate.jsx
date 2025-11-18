@@ -9,9 +9,9 @@ export default function AuthGate(){
   const role = searchParams.get('role') || ''
   const nav = useNavigate()
 
-  // after login/signup, redirect to role-specific dashboard
+  
   const onAuthSuccess = (user)=>{
-    // prefer the role from the query param (user clicked a role card) if present
+    
     const chosenRole = role || user?.role
     if (chosenRole === 'student') nav('/student')
     else if (chosenRole === 'employer') nav('/employer')

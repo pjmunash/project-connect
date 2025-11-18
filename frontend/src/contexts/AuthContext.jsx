@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as 
 
 const AuthContext = createContext(null)
 
-// Simple role store if you don't have a backend to persist roles yet.
+// Simple role store for dev: stored in localStorage under ROLE_MAP_KEY
 const ROLE_MAP_KEY = 'opportunet_roles'
 function saveRole(email, role){
   try{
@@ -29,24 +29,24 @@ export function AuthProvider({ children }){
 
   useEffect(()=>{
     if (firebaseMode){
-      // subscribe to firebase auth state
+      
       const unsub = onAuthStateChanged(auth, async (fuser)=>{
         if (fuser){
             const id = await fuser.getIdToken()
-            // Exchange Firebase ID token for backend JWT so backend-side role and permissions persist
+            
             try{
               const exchange = await api.post('/auth/firebase-exchange', { idToken: id, role: loadRole(fuser.email) })
               const backendToken = exchange.data.token
               const backendUser = exchange.data.user
-              // Use backend JWT for subsequent requests
+              
               setToken(backendToken)
               localStorage.setItem('token', backendToken)
               api.setToken(backendToken)
-              // Prefer the role supplied by the backend exchange (it reflects persisted user role)
+              
               const roleFromBackend = backendUser?.role || loadRole(fuser.email) || 'student'
               setUser({ id: backendUser?.id || fuser.uid, email: fuser.email, name: fuser.displayName, role: roleFromBackend })
             }catch(e){
-              // Fallback to using ID token if exchange failed
+              
               setToken(id)
               localStorage.setItem('token', id)
               try{ api.setToken(id) }catch(e){}
@@ -87,15 +87,15 @@ export function AuthProvider({ children }){
     }
     const res = await api.post('/auth/login', { email, password })
   setToken(res.data.token)
-  // set axios token immediately
+  
   api.setToken(res.data.token)
   localStorage.setItem('token', res.data.token)
-  // set user from backend
+  
   try{ setUser(res.data.user) }catch(e){}
   return res
   }
 
-  // Resend a verification email to the current firebase user (if using firebase)
+  
   const resendVerification = async ()=>{
     if (!firebaseMode) throw new Error('Not in firebase mode')
     try{
@@ -105,7 +105,7 @@ export function AuthProvider({ children }){
     }catch(e){ return { ok: false, error: e.message || String(e) } }
   }
 
-  // Check whether the currently signed-in firebase user is email-verified
+  
   const checkEmailVerified = async ()=>{
     if (!firebaseMode) return { verified: true }
     try{

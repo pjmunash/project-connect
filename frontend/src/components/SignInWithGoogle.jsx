@@ -7,7 +7,7 @@ export default function SignInWithGoogle({ onSuccess, onError, label='Continue w
     try{
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
-      // persist role for backend exchange using the ROLE_MAP format
+      
       if (role && result?.user?.email){
         try{
           const KEY = 'opportunet_roles'

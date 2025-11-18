@@ -27,6 +27,7 @@ function readJsonFile(filepath){
 function initFirebaseAdmin(){
   if (initialized) return;
   const adm = tryRequireAdmin();
+  
   if (!adm){
     console.log('firebase-admin package not installed. Skipping Firebase Admin initialization.');
     return;

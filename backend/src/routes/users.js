@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const { requireAuth } = require('./auth');
 
-// GET /api/users/me/profile - returns user profile
+
 router.get('/me/profile', requireAuth, async (req, res) => {
   try{
     const user = await User.findById(req.user.id).select('-passwordHash');
@@ -12,7 +12,7 @@ router.get('/me/profile', requireAuth, async (req, res) => {
   }catch(e){ console.error(e); res.status(500).json({ message: 'Server error' }) }
 });
 
-// POST /api/users/me/profile - update profile (skills, education, projects)
+
 router.post('/me/profile', requireAuth, async (req, res) => {
   try{
     const data = req.body || {};

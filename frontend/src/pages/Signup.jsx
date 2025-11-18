@@ -17,7 +17,7 @@ export default function Signup({ defaultRole='', onSuccess }){
   const nav = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // If auth.user becomes available (e.g. after Google sign-in and backend exchange), navigate to appropriate dashboard
+  
   useEffect(()=>{
     if (auth.user && !verificationSent){
       const roleResolved = auth.user.role || role
@@ -41,15 +41,15 @@ export default function Signup({ defaultRole='', onSuccess }){
       const respUser = res.data?.user || { role }
       if (onSuccess) return onSuccess(respUser)
 
-      // If running in Firebase mode the signup has sent a verification email.
-      // Show a confirmation screen and allow resending / checking verification.
+      
+      
       if (auth.firebaseMode){
         setVerificationSent(true)
         setVerifyMessage(`A verification link was sent to ${email}. Please check your inbox.`)
         return
       }
 
-      // navigate based on role
+      
       if (respUser.role === 'student') nav('/student')
       else if (respUser.role === 'employer') nav('/employer')
       else if (respUser.role === 'university') nav('/university')
@@ -75,9 +75,9 @@ export default function Signup({ defaultRole='', onSuccess }){
       if (!firebaseAuth.currentUser) return setVerifyMessage('No active session. Please sign in and try again.')
       await reload(firebaseAuth.currentUser)
       if (firebaseAuth.currentUser.emailVerified){
-        // force refresh token so backend sees updated claim if needed
+        
         try{ await firebaseAuth.currentUser.getIdToken(true) }catch(e){}
-        // navigate based on role we collected earlier
+        
         if (role === 'student') nav('/student')
         else if (role === 'employer') nav('/employer')
         else if (role === 'university') nav('/university')
@@ -121,12 +121,13 @@ export default function Signup({ defaultRole='', onSuccess }){
               <option value="student">Student</option>
               <option value="employer">Employer</option>
               <option value="university">University</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
           <button className="neo-btn w-full">Create account</button>
         </form>
     <div className="mt-4">
-      <SignInWithGoogle onSuccess={()=>{ /* onAuthStateChanged will handle navigation */ }} onError={()=>{}} label="Sign up with Google" role={role} />
+      <SignInWithGoogle onSuccess={()=>{  }} onError={()=>{}} label="Sign up with Google" role={role} />
     </div>
       </div>
     </div>

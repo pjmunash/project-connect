@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
+const firebaseAdminHelper = require('./firebaseAdmin');
+
 const authRoutes = require('./routes/auth');
 const internshipRoutes = require('./routes/internships');
 const adminRoutes = require('./routes/admin');
@@ -12,16 +14,6 @@ const uploadsRoutes = require('./routes/uploads');
 const usersRoutes = require('./routes/users');
 
 const app = express();
-
-// Development request logger: prints method, url and whether an Authorization header was present
-app.use((req, res, next) => {
-  try {
-    console.log('[REQ]', req.method, req.url, 'auth=', !!req.headers && !!req.headers.authorization);
-  } catch (e) { /* ignore logging errors */ }
-  next();
-});
-
-// Allow flexible CORS in deployments; adapt origin as needed in production
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
@@ -33,24 +25,10 @@ app.use('/api/university', universityRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/users', usersRoutes);
 
-// Health check
-app.get('/api/health', (_, res) => res.status(200).json({ status: 'ok' }));
-
-// Internal status for troubleshooting Firebase Admin in deployed environments.
-// Returns non-sensitive booleans (configured, whether env vars exist).
-app.get('/api/_internal/admin-status', (_, res) => {
-  try{
-    const fa = require('./firebaseAdmin');
-    const adm = fa.getAdmin && fa.getAdmin();
-    const hasBase64 = !!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-    const hasPath = !!process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-    res.json({ configured: !!adm, hasEnvBase64: hasBase64, hasEnvPath: hasPath });
-  }catch(e){
-    res.status(500).json({ error: e && (e.message || String(e)) });
-  }
-});
-
-const PORT = process.env.PORT || 4000;
+const MIN_PORT = 4000;
+const MAX_PORT = 4010;
+const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : null;
+const PORT = (requestedPort && requestedPort >= MIN_PORT && requestedPort <= MAX_PORT) ? requestedPort : MIN_PORT;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/innterbridge-dev';
 
 if (!process.env.MONGO_URI) {
@@ -60,67 +38,50 @@ if (!process.env.MONGO_URI) {
   console.log('MONGO_URI loaded (masked):', masked);
 }
 
-// Initialize Firebase Admin via helper (safe no-op if package missing or no creds)
-try{
-  const { initFirebaseAdmin } = require('./firebaseAdmin');
-  initFirebaseAdmin();
-}catch(e){
-  console.warn('Could not initialize Firebase Admin from helper:', e && (e.message || e));
+// Initialize Firebase Admin using the helper which supports multiple
+// credential sources (base64 env, path env, or serviceAccount.json file).
+try {
+  firebaseAdminHelper.initFirebaseAdmin();
+} catch (e) {
+  console.warn('Firebase admin init failed at startup', e.message || e);
 }
 
-// Log whether Firebase Admin ended up configured (helpful on deployment logs)
-try{
-  const fa = require('./firebaseAdmin');
-  const adm = fa.getAdmin && fa.getAdmin();
-  if (adm) console.log('Firebase Admin: configured');
-  else console.warn('Firebase Admin: not configured');
-}catch(e){
-  console.warn('Failed to check Firebase Admin status:', e && (e.message || e));
-}
 
-// Resilient MongoDB connection with retry/backoff and helpful logging.
-const mongooseOpts = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  keepAlive: true,
-  keepAliveInitialDelay: 300000
-};
-
-mongoose.connection.on('connected', () => console.log('MongoDB: connected'));
-mongoose.connection.on('reconnected', () => console.log('MongoDB: reconnected'));
-mongoose.connection.on('disconnected', () => console.warn('MongoDB: disconnected'));
-mongoose.connection.on('error', (err) => console.error('MongoDB error:', err && (err.message || err)));
-
-async function connectWithRetry(retries = 0){
-  try{
-    await mongoose.connect(MONGO_URI, mongooseOpts);
-    console.log('Connected to MongoDB');
-    // start HTTP server once DB is connected
-    function tryListen(portToTry){
-      const server = app.listen(portToTry, () => console.log(`Server running on port ${portToTry}`));
-      server.on('error', (err) => {
-        if (err && err.code === 'EADDRINUSE'){
-          console.warn(`Port ${portToTry} in use, trying ${portToTry + 1}`);
-          tryListen(portToTry + 1);
-        } else {
-          console.error('Server error', err.message || err);
-        }
-      });
-    }
-    tryListen(PORT);
-  }catch(err){
-    console.error('MongoDB connection error:', err && (err.message || err));
-    // Exponential backoff with cap — useful for transient network issues or DB sleeping
-    const maxDelayMs = 60 * 1000; // 1 minute
-    const delay = Math.min(1000 * Math.pow(2, Math.min(retries, 6)), maxDelayMs);
-    console.log(`Retrying MongoDB connection in ${delay}ms (attempt ${retries + 1})`);
-    setTimeout(() => connectWithRetry(retries + 1), delay);
+function tryListen(portToTry){
+  if (portToTry > MAX_PORT){
+    console.error(`No available ports in range ${MIN_PORT}-${MAX_PORT}. Aborting.`);
+    process.exit(1);
+    return;
   }
+  const server = app.listen(portToTry, () => {
+    console.log(`Server running on port ${portToTry}`);
+    console.log('API: online');
+  });
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE'){
+      console.warn(`Port ${portToTry} in use, trying ${portToTry + 1}`);
+      tryListen(portToTry + 1);
+    } else {
+      console.error('Server error', err && (err.message || err));
+    }
+  });
 }
 
-// Start the initial connect attempt
-connectWithRetry();
+function connectWithRetry(retries = 0){
+  mongoose.connect(MONGO_URI)
+    .then(() => {
+      console.log('Connected to MongoDB');
+      tryListen(PORT);
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err && (err.message || err));
+      const maxDelayMs = 60 * 1000; 
+      const delay = Math.min(1000 * Math.pow(2, Math.min(retries, 6)), maxDelayMs);
+      console.log(`Retrying MongoDB connection in ${delay}ms (attempt ${retries + 1})`);
+      setTimeout(() => connectWithRetry(retries + 1), delay);
+    });
+}
 
+
+connectWithRetry();
 

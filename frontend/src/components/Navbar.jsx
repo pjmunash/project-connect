@@ -39,10 +39,9 @@ export default function Navbar(){
             <Link to="/student" className="hover:text-cyan-300">Student</Link>
             <Link to="/employer" className="hover:text-cyan-300">Employer</Link>
             <Link to="/university" className="hover:text-cyan-300">University</Link>
+             
           </nav>
         </div>
-
-        {/* Right side */}
         <div className="flex items-center gap-4">
           <ApiStatus />
           {user && user.role === 'employer' && (
@@ -51,51 +50,23 @@ export default function Navbar(){
               {applicantCount > 0 && <span className="absolute -top-2 -right-4 bg-[#ff6b6b] text-white rounded-full text-xs px-2">{applicantCount}</span>}
             </div>
           )}
-
-          {/* Desktop auth actions */}
-          <div className="hidden sm:flex items-center gap-3">
-            {user ? (
-              <>
-                <div className="text-sm muted">{user.name || user.email}</div>
-                <button onClick={logout} className="neo-ghost">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="neo-ghost">Login</Link>
-                <Link to="/signup" className="neo-btn">Sign up</Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile menu toggle */}
-          <button onClick={()=>setOpen(o=>!o)} className="md:hidden p-2 rounded-md neo-ghost">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} /></svg>
-          </button>
+          {user && user.role === 'admin' && (
+            <div className="relative muted text-sm hidden sm:block">
+              <Link to="/admin">Admin</Link>
+            </div>
+          )}
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="text-sm muted hidden sm:block">{user.name || user.email}</div>
+              <button onClick={logout} className="neo-ghost">Logout</button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Link to="/login" className="neo-ghost">Login</Link>
+              <Link to="/signup" className="neo-btn">Sign up</Link>
+            </div>
+          )}
         </div>
-
-        {/* Mobile dropdown menu */}
-        {open && (
-          <div className="w-full mt-3 md:hidden">
-            <nav className="flex flex-col gap-2 muted text-sm neo-card">
-              <Link to="/student" onClick={()=>setOpen(false)} className="px-3 py-2 hover:text-cyan-300">Student</Link>
-              <Link to="/employer" onClick={()=>setOpen(false)} className="px-3 py-2 hover:text-cyan-300">Employer</Link>
-              <Link to="/university" onClick={()=>setOpen(false)} className="px-3 py-2 hover:text-cyan-300">University</Link>
-              <div className="border-t border-white/5 mt-2 pt-2 flex flex-col gap-2">
-                {user ? (
-                  <>
-                    <div className="text-sm muted px-3">{user.name || user.email}</div>
-                    <button onClick={()=>{ setOpen(false); logout(); }} className="neo-ghost m-3">Logout</button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/login" onClick={()=>setOpen(false)} className="neo-ghost m-3">Login</Link>
-                    <Link to="/signup" onClick={()=>setOpen(false)} className="neo-btn m-3">Sign up</Link>
-                  </>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   )

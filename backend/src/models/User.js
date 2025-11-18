@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
     certifications: [String],
     projects: [{ title: String, link: String, description: String }],
   },
-  // Gamification: badges, streaks and points
+  
   gamification: {
     points: { type: Number, default: 0 },
     badges: [{ key: String, awardedAt: Date }],

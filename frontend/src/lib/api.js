@@ -32,42 +32,17 @@ async function probePort(port, timeout = 1200){
 (async function detectApiBase(){
   try{
     const cached = localStorage.getItem(CACHE_KEY)
-
-    // If a build-time API base is provided, always prefer and cache it.
-    if (import.meta.env.VITE_API_BASE){
-      setBase(import.meta.env.VITE_API_BASE)
-      return
-    }
-
-    // If we have a cached base, prefer it — except when the cached value points to localhost
-    // and the current page is NOT being served from localhost (i.e. production). In that case
-    // ignore the cached dev URL so production pages don't keep calling a local backend.
-    if (cached){
-      try{
-        const isLocalCached = /^https?:\/\/(?:localhost|127\.0\.0\.1)/i.test(cached)
-        const onLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        if (isLocalCached && !onLocalHost){
-          // ignore cached dev localhost in production and fall through to probing/fallback
-        } else {
-          instance.defaults.baseURL = cached
-          return
-        }
-      }catch(e){ /* ignore parse errors and continue */ }
-    }
-  }catch(e){ /* localStorage may be unavailable */ }
-
-  // If env wasn't set and no usable cache, probe local dev ports (dev convenience)
+    if (cached){ instance.defaults.baseURL = cached; return }
+  }catch(e){}
+  // if env explicitly set, prefer it and cache it
+  if (import.meta.env.VITE_API_BASE){ setBase(import.meta.env.VITE_API_BASE); return }
   for (const p of PROBE_PORTS){
     const base = await probePort(p)
     if (base){ setBase(base); return }
   }
-
-  // final fallback
+  // fallback to API_BASE
   setBase(API_BASE)
 })()
-
-// Small runtime helper for debugging: run this in the browser console to clear the cached API base
-try{ window.OPPORTUNET_CLEAR_API_CACHE = () => { try{ localStorage.removeItem(CACHE_KEY); console.log('opportunet_api_base cleared') }catch(e){ console.warn('failed to clear opportunet_api_base', e) } } }catch(e){}
 
 function absoluteUrl(path){
   if (!path) return ''

@@ -7,7 +7,7 @@ const router = express.Router();
 
 const Internship = require('../models/Internship');
 
-// requireAuth comes from auth router which exports it as a property
+
 const requireAuth = authRoutes.requireAuth;
 
 function requireRole(role){
@@ -18,7 +18,7 @@ function requireRole(role){
   }
 }
 
-// GET /api/university/students - list students (simple paging optional)
+
 router.get('/students', requireAuth, requireRole('university'), async (req, res) => {
   try{
     const q = req.query.q || '';
@@ -32,7 +32,7 @@ router.get('/students', requireAuth, requireRole('university'), async (req, res)
   }
 });
 
-// POST /api/university/students/:id/verify { verified: true|false }
+
 router.post('/students/:id/verify', requireAuth, requireRole('university'), async (req, res) => {
   try{
     const id = req.params.id;
@@ -43,14 +43,14 @@ router.post('/students/:id/verify', requireAuth, requireRole('university'), asyn
     user.verified = verified;
     await user.save();
 
-    // If Firebase Admin available, try to sync emailVerified flag there too
+    
     const adm = getAdmin();
     if (adm){
       try{
         const fbUser = await adm.auth().getUserByEmail(user.email);
         await adm.auth().updateUser(fbUser.uid, { emailVerified: !!verified });
       }catch(e){
-        // ignore firebase update errors but log them
+        
         console.warn('Failed to sync verification to Firebase for', user.email, e.message || e);
       }
     }
@@ -62,14 +62,14 @@ router.post('/students/:id/verify', requireAuth, requireRole('university'), asyn
   }
 });
 
-// POST /api/university/students/bulk
-// Body: { emails: ['a@x.com','b@y.com'] } or { domain: 'kabarak.ac.ke' }
+
+
 router.post('/students/bulk', requireAuth, requireRole('university'), async (req, res) => {
   try{
     const { emails, domain } = req.body || {};
     let filter = { role: 'student' };
     if (Array.isArray(emails) && emails.length > 0){
-      // normalize
+      
       const lower = emails.map(e => (e||'').trim().toLowerCase()).filter(Boolean);
       filter.email = { $in: lower };
     }else if (domain && typeof domain === 'string'){
@@ -80,11 +80,11 @@ router.post('/students/bulk', requireAuth, requireRole('university'), async (req
     }
 
     const users = await User.find(filter).select('name email verified profile').lean();
-    // gather internship applications for these users
+    
     const userIds = users.map(u => u._id);
     const internships = await Internship.find({ 'applicants.user': { $in: userIds } }).lean();
 
-    // map userId to their applications
+    
     const map = {};
     users.forEach(u => { map[String(u._id)] = { user: u, applications: [] } });
     internships.forEach(i => {
@@ -114,7 +114,7 @@ router.post('/students/bulk', requireAuth, requireRole('university'), async (req
       }
     }))
 
-    // aggregate stats
+    
     const stats = {
       students: results.length,
       totalApplications: results.reduce((s,r)=>s + r.counts.total, 0),
