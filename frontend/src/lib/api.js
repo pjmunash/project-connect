@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Primary fallback if no detection runs yet
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:40001/api'
+export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api'
 
 const instance = axios.create({ baseURL: API_BASE, headers: { 'Content-Type': 'application/json' } })
 
