@@ -1,3 +1,4 @@
 ﻿serviceAccount.json
 .env
 backend/.env
+serviceAccount.base64.txt
