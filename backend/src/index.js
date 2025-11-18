@@ -13,6 +13,14 @@ const usersRoutes = require('./routes/users');
 
 const app = express();
 
+// Development request logger: prints method, url and whether an Authorization header was present
+app.use((req, res, next) => {
+  try {
+    console.log('[REQ]', req.method, req.url, 'auth=', !!req.headers && !!req.headers.authorization);
+  } catch (e) { /* ignore logging errors */ }
+  next();
+});
+
 // Allow flexible CORS in deployments; adapt origin as needed in production
 app.use(cors());
 app.use(express.json());
